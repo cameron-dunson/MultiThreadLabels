@@ -33,6 +33,7 @@ serviceCode = os.getenv(
     "SERVICE_CODE"
 )  # Get a list of service codes by making a GET request to /v1/carriers
 totalWeight = os.getenv("TOTAL_WEIGHT")
+weightUnit = os.getenv("WEIGHT_UNIT")
 shipToName = os.getenv("SHIP_TO_NAME")
 shipToCompany = os.getenv("SHIP_TO_COMPANY")
 shipToAddress1 = os.getenv("SHIP_TO_ADDRESS_1")
