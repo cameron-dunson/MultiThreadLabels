@@ -114,8 +114,6 @@ class Shipment:
     packages: List[Package]
     insurance_provider: str = "none"
     confirmation: str = "none"
-    is_return_label: bool = True
-    charge_event: str = "on_carrier_acceptance"  # Enables POUR if enabled on the Stamps.com account being used
     validate_address: Optional[str] = "no_validation"
 
     def __post_init__(self):

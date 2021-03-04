@@ -4,7 +4,6 @@ import datetime
 import time
 import json as j
 
-
 from requests_async import *
 import asyncio
 from dotenv import load_dotenv
@@ -133,7 +132,14 @@ async def createLabel(y, folder):
             ship_from=shipFrom,
             packages=[packages_to_ship],
         )
-        new_data = j.dumps({"shipment": dataclasses.asdict(shipment)}, indent=2)
+        new_data = j.dumps(
+            {
+                "is_return_label": "true",
+                "charge_event": "on_carrier_acceptance",
+                "shipment": dataclasses.asdict(shipment),
+            },
+            indent=2,
+        )
         labelUrl = host + "/v1/labels/"
         r = await post(labelUrl, headers=headers, data=new_data)
         response = r.json()
