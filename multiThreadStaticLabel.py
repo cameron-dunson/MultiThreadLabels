@@ -1,11 +1,22 @@
 import os
-from requests_async import *
-import json as j
-import time
-import asyncio
 import os.path
+import datetime
+import time
+import json as j
 
+from requests_async import *
+import asyncio
 from dotenv import load_dotenv
+
+import dataclasses
+from models import (
+    Shipment,
+    ShipFromAddress,
+    ShipToAddress,
+    Package,
+    PackageWeight,
+    PackageDimensions,
+)
 
 load_dotenv()
 
@@ -50,6 +61,8 @@ shipFromCity = os.getenv("SHIP_FROM_CITY")
 shipFromState = os.getenv("SHIP_FROM_STATE")
 shipFromZip = os.getenv("SHIP_FROM_ZIP")
 shipFromPhone = os.getenv("SHIP_FROM_PHONE")
+dt = datetime.datetime.now()
+CURRENT_DATE = dt.strftime("%m/%d/%Y")
 
 
 async def main():
@@ -81,49 +94,54 @@ async def createLabel(y, folder):
     # range should be # of threads / # of labels
     for x in range(0, int(os.getenv("HOW_MANY_LABELS_I_NEED"))):
         # Modify Globals to change shipment information
-        data = (
-            "{'shipment': {'service_code': '"
-            + serviceCode
-            + "','carrier_id': '"
-            + carrierId
-            + "', 'ship_to': {'name': '"
-            + shipToName
-            + "','company_name': '"
-            + shipToCompany
-            + "','address_line1': '"
-            + shipToAddress1
-            + "','address_line2': '"
-            + shipToAddress2
-            + "','city_locality': '"
-            + shipToCity
-            + "','state_province': '"
-            + shipToState
-            + "','postal_code': '"
-            + shipToZip
-            + "','country_code': 'US','phone':'"
-            + shipToPhone
-            + "'},'ship_from': {'name': '"
-            + shipFromName
-            + "','phone': '"
-            + shipFromPhone
-            + "','company_name': '"
-            + shipFromCompany
-            + "','address_line1': '"
-            + shipFromAddress1
-            + "','address_line2': '"
-            + shipFromAddress2
-            + "','address_line3': '','city_locality': '"
-            + shipFromCity
-            + "','state_province': '"
-            + shipFromState
-            + "','postal_code': '"
-            + shipFromZip
-            + "','country_code': 'US'},'packages': [{'weight': {'value': "
-            + totalWeight
-            + " ,'unit': 'pound'}}]},'test_label': false,'is_return_label': true}"
+        packageDimensions = PackageDimensions()
+
+        pacakgeWeight = PackageWeight(value=float(totalWeight), unit=weightUnit)
+
+        packages_to_ship = Package(weight=pacakgeWeight, dimensions=packageDimensions)
+
+        shipTo = ShipToAddress(
+            name=shipToName,
+            phone=shipToPhone,
+            company_name=shipToCompany,
+            address_line1=shipToAddress1,
+            address_line2=shipToAddress2,
+            city_locality=shipToCity,
+            state_province=shipToState,
+            postal_code=shipToZip,
+            country_code="US",
+        )
+
+        shipFrom = ShipFromAddress(
+            name=shipFromName,
+            phone=shipFromPhone,
+            company_name=shipFromCompany,
+            address_line1=shipFromAddress1,
+            address_line2=shipFromAddress2,
+            city_locality=shipFromCity,
+            state_province=shipFromState,
+            postal_code=shipFromZip,
+            country_code="US",
+        )
+
+        shipment = Shipment(
+            carrier_id=carrierId,
+            service_code=serviceCode,
+            ship_date=CURRENT_DATE,
+            ship_to=shipTo,
+            ship_from=shipFrom,
+            packages=[packages_to_ship],
+        )
+        new_data = j.dumps(
+            {
+                "is_return_label": "true",
+                "charge_event": "on_carrier_acceptance",
+                "shipment": dataclasses.asdict(shipment),
+            },
+            indent=2,
         )
         labelUrl = host + "/v1/labels/"
-        r = await post(labelUrl, headers=headers, data=data)
+        r = await post(labelUrl, headers=headers, data=new_data)
         response = r.json()
         jResponse = j.dumps(response, indent=2)
         # Uncomment the following line to print request data for quick debugging
