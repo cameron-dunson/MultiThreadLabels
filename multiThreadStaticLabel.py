@@ -137,6 +137,7 @@ async def createLabel(y, folder):
                 "is_return_label": "true",
                 "charge_event": "on_carrier_acceptance",
                 "shipment": dataclasses.asdict(shipment),
+                "rma_number": os.getenv("RMA_NUMBER"),
             },
             indent=2,
         )
