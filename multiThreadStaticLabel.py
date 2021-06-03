@@ -4,6 +4,7 @@ import datetime
 import time
 import json as j
 
+import data as data
 from requests_async import *
 import asyncio
 from dotenv import load_dotenv
@@ -135,7 +136,7 @@ async def createLabel(y, folder):
         new_data = j.dumps(
             {
                 "is_return_label": "true",
-                "charge_event": "on_carrier_acceptance",
+                "charge_event": "carrier_default",
                 "shipment": dataclasses.asdict(shipment),
                 "rma_number": os.getenv("RMA_NUMBER"),
             },
@@ -146,16 +147,16 @@ async def createLabel(y, folder):
         response = r.json()
         jResponse = j.dumps(response, indent=2)
         # Uncomment the following line to print request data for quick debugging
-        # print(jResponse)
+        #print(jResponse)
         data = j.loads(jResponse, parse_int=str)
         status = r.status_code
         if status == 200:
             downloadUrl = data["label_download"]["pdf"]
-            print(f"{x + 1}.) label created")
+            print(f"{x + 1}.) label created " + data["label_id"])
             try:
-                await downloadPdf(str(x + 1), downloadUrl, folder)
+                await downloadPdf(str(x + 1), downloadUrl, folder, data)
             except:
-                print("PDF could not be printed.")
+                print("PDF could not be printed - "+ data["label_id"])
         elif status == 429:
             sleep_seconds = 90
             print(
@@ -166,10 +167,10 @@ async def createLabel(y, folder):
             print(f"Label Number: {x + 1} failed:\n {jResponse}")
 
 
-async def downloadPdf(fileName, downloadUrl, folder):
+async def downloadPdf(fileName, downloadUrl, folder, data):
     r = await get(downloadUrl)
     filePath = "./labels/" + folder
-    fileName = fileName + ".pdf"
+    fileName = data["label_id"] + ".pdf"
     completeName = os.path.join(filePath, fileName)
     with open(completeName, "wb") as f:
         f.write(r.content)
