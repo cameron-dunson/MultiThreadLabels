@@ -136,7 +136,7 @@ async def createLabel(y, folder):
         new_data = j.dumps(
             {
                 "is_return_label": "true",
-                "charge_event": "carrier_default",
+                "charge_event": "on_carrier_acceptance",
                 "shipment": dataclasses.asdict(shipment),
                 "rma_number": os.getenv("RMA_NUMBER"),
             },
@@ -147,7 +147,7 @@ async def createLabel(y, folder):
         response = r.json()
         jResponse = j.dumps(response, indent=2)
         # Uncomment the following line to print request data for quick debugging
-        #print(jResponse)
+        # print(jResponse)
         data = j.loads(jResponse, parse_int=str)
         status = r.status_code
         if status == 200:
